@@ -42,6 +42,23 @@ python3 src/aiops_pipeline.py
 The command reads the sample telemetry, detects anomalies, publishes them to the in-memory
 topic, and prints the consumed events.
 
+## Reproduce the Demonstration
+
+From a Python 3 environment, run the following commands from the repository root:
+
+```bash
+git clone https://github.com/ShubhamHCK/github-skills-challenge_202401100200300.git
+cd github-skills-challenge_202401100200300
+python3 -m pip install -r requirements.txt
+python3 -m pytest -q
+python3 src/aiops_pipeline.py
+```
+
+The tests validate the detector, event producer, topic, consumer, and corrected pipeline.
+The final command reads `data/service_data.json` and prints the two detected and consumed
+anomaly events. No external event broker is required because `EventTopic` is an in-memory
+simulation.
+
 ## Operational Data Analysis
 
 The supplied `data/service_data.json` contains 10 observations for `payment-service`,
