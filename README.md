@@ -141,6 +141,27 @@ pipeline, producer, and consumer modules now support both package imports and di
 script execution. The focused suite passes with 6 tests, and a package-level pipeline
 assertion confirms the two detected events equal the two consumed events.
 
+## End-to-End Pipeline Execution
+
+Task 6 was completed by running `python3 src/aiops_pipeline.py` after the corrections. The
+execution verified the complete flow:
+
+`Operational data -> AnomalyDetector -> anomaly event -> EventProducer -> anomaly-events
+topic -> EventConsumer -> AIOps output`
+
+The final result was:
+
+```text
+Records processed: 10
+Anomalies detected: 2
+Events consumed: 2
+```
+
+The final output successfully reported the detected payment-service issues at 10:05 and
+10:06, including high response time, high CPU and memory utilization where applicable,
+and the concerning log-level signal. The complete regression suite also passed: `10
+passed`.
+
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
 
