@@ -65,6 +65,31 @@ covering 2026-09-20 from 10:00:00 through 10:09:00 at one-minute intervals.
 	These records combine failure-related log messages with degraded latency and, at
 	10:06, high resource utilization, so they are the likely anomaly window.
 
+## Anomaly Detection Report
+
+The provided `AnomalyDetector` uses thresholds of 500 ms for response time, 80% for CPU,
+and 80% for memory. Running the provided pipeline processes all 10 observations and
+produces 2 anomaly events:
+
+- **10:05:00:** flagged for high response time (`610 ms`; threshold `500 ms`). The source
+  log is `ERROR` with the message `Payment service timeout`; CPU is 75% and memory is 70%,
+  so neither resource threshold is exceeded.
+- **10:06:00:** flagged for high response time (`640 ms`), high CPU utilization (`94%`),
+  and high memory utilization (`91%`). The source log is `ERROR` with the message
+  `Database connection timeout`.
+
+The remaining eight observations are classified as normal: their metrics stay below the
+configured thresholds and their logs are `INFO` messages reporting successful processing.
+No normal observation was incorrectly flagged based on these rules.
+
+The expected metric anomalies were detected, but the concerning `ERROR` log events were
+not included as detector reasons. The current implementation adds a log reason only when
+`log_level` is `WARNING`, even though both unusual records in this dataset use `ERROR`.
+One improvement would be to treat `ERROR` (and, if appropriate, `WARNING`) as a log
+anomaly and include that signal in the generated event. The pipeline also reports zero
+consumed events because its producer and consumer use different in-memory topics; this
+is an event-flow limitation separate from the detector's classifications.
+
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
 
