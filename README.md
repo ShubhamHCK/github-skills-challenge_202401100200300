@@ -42,6 +42,29 @@ python3 src/aiops_pipeline.py
 The command reads the sample telemetry, detects anomalies, publishes them to the in-memory
 topic, and prints the consumed events.
 
+## Operational Data Analysis
+
+The supplied `data/service_data.json` contains 10 observations for `payment-service`,
+covering 2026-09-20 from 10:00:00 through 10:09:00 at one-minute intervals.
+
+1. **Metrics:** `response_time_ms` is request latency in milliseconds; `cpu_percent` and
+	`memory_percent` are resource-utilization percentages. These numeric fields describe
+	measurable service and infrastructure behavior.
+2. **Log information:** `log_level` identifies the severity or level of the log entry, and
+	`message` contains its human-readable event description. The `service` field identifies
+	the source of both the metrics and logs.
+3. **Timestamps:** `timestamp` records when each observation occurred. The chronological,
+	one-minute spacing makes it possible to see the short degradation at 10:05-10:06 and
+	the return to normal levels from 10:07 onward.
+4. **Normal behavior:** The records from 10:00-10:04 and 10:07-10:09 appear normal. They
+	have `INFO` logs reporting successful processing, response times from 120 to 150 ms,
+	CPU from 42% to 50%, and memory from 51% to 57%.
+5. **Unusual behavior:** The 10:05 record reports a payment-service timeout with an
+	`ERROR` log and response time of 610 ms. The 10:06 record is more severe: it reports a
+	database connection timeout, response time of 640 ms, CPU at 94%, and memory at 91%.
+	These records combine failure-related log messages with degraded latency and, at
+	10:06, high resource utilization, so they are the likely anomaly window.
+
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
 
