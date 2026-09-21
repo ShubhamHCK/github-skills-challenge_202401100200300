@@ -90,6 +90,50 @@ anomaly and include that signal in the generated event. The pipeline also report
 consumed events because its producer and consumer use different in-memory topics; this
 is an event-flow limitation separate from the detector's classifications.
 
+## Event Flow Verification
+
+The event-stream components have these roles:
+
+- **Event/message:** the dictionary produced by `AnomalyDetector`, containing the event
+  type, timestamp, service, source record, and detection reasons.
+- **Producer:** `EventProducer` accepts a detected event and publishes it to its configured
+  topic.
+- **Topic:** `EventTopic` is the in-memory stream that stores published messages and makes
+  them available to consumers.
+- **Consumer:** `EventConsumer` reads messages from its configured topic. In the pipeline,
+  the consumed event is the downstream AIOps result that is returned and printed for
+  handling or reporting.
+
+The provided workflow was executed against `data/service_data.json` with this result:
+
+```text
+Records processed: 10
+Anomalies detected: 2
+Events consumed: 0
+```
+
+This verifies detection and handoff to the producer, but not delivery through the complete
+workflow, because `src/aiops_pipeline.py` creates a `service-events` topic for the producer
+and a separate `anomaly-events` topic for the consumer. The consumer therefore receives no
+messages.
+
+A focused check using the same provided components and one shared `anomaly-events` topic
+verified the complete event path for the 10:05 anomaly:
+
+```text
+anomaly_created= True
+published= True
+topic= anomaly-events
+received= 1
+same_event= True
+reasons= High response time
+```
+
+Thus, the producer, topic, consumer, and event/message behavior works when wired to the
+same topic, while the supplied pipeline wiring currently prevents the event from reaching
+its downstream consumer. The direct check also shows that the event's detection reason is
+preserved through consumption.
+
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
 
