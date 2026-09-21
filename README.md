@@ -82,13 +82,10 @@ The remaining eight observations are classified as normal: their metrics stay be
 configured thresholds and their logs are `INFO` messages reporting successful processing.
 No normal observation was incorrectly flagged based on these rules.
 
-The expected metric anomalies were detected, but the concerning `ERROR` log events were
-not included as detector reasons. The current implementation adds a log reason only when
-`log_level` is `WARNING`, even though both unusual records in this dataset use `ERROR`.
-One improvement would be to treat `ERROR` (and, if appropriate, `WARNING`) as a log
-anomaly and include that signal in the generated event. The pipeline also reports zero
-consumed events because its producer and consumer use different in-memory topics; this
-is an event-flow limitation separate from the detector's classifications.
+The detector now includes both `ERROR` and `WARNING` as concerning log levels. The two
+incident records therefore include their log signal as well as their metric reasons. A
+remaining limitation is that detection uses fixed per-record thresholds and does not
+correlate trends across a longer time window.
 
 ## Event Flow Verification
 
@@ -104,7 +101,7 @@ The event-stream components have these roles:
   the consumed event is the downstream AIOps result that is returned and printed for
   handling or reporting.
 
-The provided workflow was executed against `data/service_data.json` with this result:
+The initial workflow execution against `data/service_data.json` produced this result:
 
 ```text
 Records processed: 10
@@ -112,27 +109,37 @@ Anomalies detected: 2
 Events consumed: 0
 ```
 
-This verifies detection and handoff to the producer, but not delivery through the complete
-workflow, because `src/aiops_pipeline.py` creates a `service-events` topic for the producer
-and a separate `anomaly-events` topic for the consumer. The consumer therefore receives no
-messages.
+Investigation identified a topic-wiring defect in `src/aiops_pipeline.py`: it created a
+`service-events` topic for the producer and a separate `anomaly-events` topic for the
+consumer. The producer was publishing successfully, but the consumer was listening to an
+empty topic. The correction was to create one shared `anomaly-events` topic for both
+components.
 
-A focused check using the same provided components and one shared `anomaly-events` topic
-verified the complete event path for the 10:05 anomaly:
+Investigation also identified a detector defect in `src/anomaly_detector.py`: it checked
+only for `WARNING`, while the concerning records in this dataset use `ERROR`. The
+correction was to recognize both levels and add a log reason to the event.
+
+The corrected workflow was executed again with this result:
 
 ```text
-anomaly_created= True
-published= True
-topic= anomaly-events
-received= 1
-same_event= True
-reasons= High response time
+Records processed: 10
+Anomalies detected: 2
+Events consumed: 2
 ```
 
-Thus, the producer, topic, consumer, and event/message behavior works when wired to the
-same topic, while the supplied pipeline wiring currently prevents the event from reaching
-its downstream consumer. The direct check also shows that the event's detection reason is
-preserved through consumption.
+It printed both downstream events:
+
+```text
+10:05:00: High response time, Concerning log level detected
+10:06:00: High response time, High CPU utilization, High memory utilization,
+		  Concerning log level detected
+```
+
+Regression validation also found that the modules used script-only imports, causing
+`tests/test_aiops_pipeline.py` to fail when importing `src.aiops_pipeline`. The affected
+pipeline, producer, and consumer modules now support both package imports and direct
+script execution. The focused suite passes with 6 tests, and a package-level pipeline
+assertion confirms the two detected events equal the two consumed events.
 
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
