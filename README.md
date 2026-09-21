@@ -179,6 +179,21 @@ The final output successfully reported the detected payment-service issues at 10
 and the concerning log-level signal. The complete regression suite also passed: `10
 passed`.
 
+## Provided Validation
+
+Task 8 validation was run with `python3 -m pytest -q` and the final workflow command. All
+10 tests passed. The validation confirms that:
+
+- The 10 operational records are loaded and processed.
+- Normal records remain unflagged and the two anomalous observations are detected.
+- Each detected observation produces an anomaly event.
+- `EventProducer` publishes both events to the shared in-memory topic.
+- `EventConsumer` receives and processes both published events.
+- The complete AIOps workflow finishes successfully and prints the issue details.
+
+No validation failures remain after correcting the topic wiring, concerning log-level
+detection, and package/script import compatibility.
+
 Your challenge is ready.
 Follow the instructions provided for this challenge and complete the required tasks in this repository.
 
